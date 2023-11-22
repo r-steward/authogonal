@@ -81,7 +81,7 @@ describe('Test Request Authenticator', () => {
             rememberMeToken: testUserAccessToken,
             loginFail: new Error('Login Error')
         }
-        const userService = new UserServiceMocker(testUserInstance.username, testUserInstance, '');
+        const userService = new UserServiceMocker(testUserAccessToken, testUserInstance, '');
         const loginServices = new LoginServiceMocker(loginSetup);
         const authenticator = new StrategyUserAuthenticator(new Map([
             [LOGIN, <UserAuthenticator<TestUser>>new UserPasswordAuthenticator(userService, loginServices)],
