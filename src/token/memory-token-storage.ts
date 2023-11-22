@@ -1,4 +1,4 @@
-import { StringTokenStorage } from "./token-manager";
+import { StringTokenStorage } from './token-manager';
 
 /**
  * Memory storage

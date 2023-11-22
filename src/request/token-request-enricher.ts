@@ -10,7 +10,7 @@ interface RequestLike {
 }
 
 /**
- * Bespoke request enricher that adds an authorization token to the request header 
+ * Bespoke request enricher that adds an authorization token to the request header
  */
 export class TokenRequestEnricher<R extends RequestLike> implements RequestEnricher<R> {
   private _tokenProvider: TokenProvider;

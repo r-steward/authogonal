@@ -4,5 +4,3 @@
 export function isPromise(p: any) {
   return p?.then !== undefined;
 }
-
-

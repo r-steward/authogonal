@@ -1,6 +1,6 @@
 {
   "name": "authogonal",
-  "version": "1.0.0-pre",
+  "version": "1.0.0-alpha",
   "description": "Typescript Authentication",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",

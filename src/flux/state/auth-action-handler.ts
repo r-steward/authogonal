@@ -23,7 +23,10 @@ export function handleAuthAction<U>(
   }
 }
 
-function startLogin<U>(state: AuthenticationState<U>, _: AuthActions.RequestedManualLoginAction): AuthenticationState<U> {
+function startLogin<U>(
+  state: AuthenticationState<U>,
+  _: AuthActions.RequestedManualLoginAction,
+): AuthenticationState<U> {
   return {
     ...state,
     actionState: {
@@ -33,7 +36,10 @@ function startLogin<U>(state: AuthenticationState<U>, _: AuthActions.RequestedMa
   };
 }
 
-function loginSuccess<U>(state: AuthenticationState<U>, action: AuthActions.ManualLoginSuccessAction<U>): AuthenticationState<U> {
+function loginSuccess<U>(
+  state: AuthenticationState<U>,
+  action: AuthActions.ManualLoginSuccessAction<U>,
+): AuthenticationState<U> {
   return {
     ...state,
     isAuthorized: true,
@@ -47,7 +53,10 @@ function loginSuccess<U>(state: AuthenticationState<U>, action: AuthActions.Manu
   };
 }
 
-function loginFailure<U>(state: AuthenticationState<U>, action: AuthActions.ManualLoginFailureAction): AuthenticationState<U> {
+function loginFailure<U>(
+  state: AuthenticationState<U>,
+  action: AuthActions.ManualLoginFailureAction,
+): AuthenticationState<U> {
   return {
     ...state,
     isAuthorized: false,

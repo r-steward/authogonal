@@ -28,8 +28,10 @@ export class BasicRequestEnricher<R extends RequestLike> implements RequestEnric
     if (LOGGER.isDebugEnabled) {
       LOGGER.debug('Authorizing request');
     }
-    return Promise.resolve(request.auth(this._userId, this._password, {
-      type: 'basic',
-    }));
+    return Promise.resolve(
+      request.auth(this._userId, this._password, {
+        type: 'basic',
+      }),
+    );
   }
 }

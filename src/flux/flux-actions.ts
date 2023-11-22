@@ -1,4 +1,4 @@
-import { UserCredentials } from "../user/user-authenticator";
+import { UserCredentials } from '../user/user-authenticator';
 
 export type EventCallback<U> = (action: AuthenticationAction<U>) => void;
 
@@ -26,10 +26,22 @@ export interface ManualLoginFailureAction {
   type: typeof MANUAL_LOGIN_FAILURE;
   failureReason: string;
 }
-export const performManualLogin = (credentials: UserCredentials): PerformManualLoginAction => ({ type: PERFORM_MANUAL_LOGIN, credentials });
-export const requestedManualLogin = (credentials: UserCredentials): RequestedManualLoginAction => ({ type: REQUESTED_MANUAL_LOGIN, credentials });
-export const manualLoginSuccess = <U>(authenticatedUser: U): ManualLoginSuccessAction<U> => ({ type: MANUAL_LOGIN_SUCCESS, authenticatedUser });
-export const manualLoginFailure = (failureReason: string): ManualLoginFailureAction => ({ type: MANUAL_LOGIN_FAILURE, failureReason });
+export const performManualLogin = (credentials: UserCredentials): PerformManualLoginAction => ({
+  type: PERFORM_MANUAL_LOGIN,
+  credentials,
+});
+export const requestedManualLogin = (credentials: UserCredentials): RequestedManualLoginAction => ({
+  type: REQUESTED_MANUAL_LOGIN,
+  credentials,
+});
+export const manualLoginSuccess = <U>(authenticatedUser: U): ManualLoginSuccessAction<U> => ({
+  type: MANUAL_LOGIN_SUCCESS,
+  authenticatedUser,
+});
+export const manualLoginFailure = (failureReason: string): ManualLoginFailureAction => ({
+  type: MANUAL_LOGIN_FAILURE,
+  failureReason,
+});
 
 // Silent login
 export const PERFORM_SILENT_LOGIN = 'auth/perform-silent-login';
@@ -56,9 +68,18 @@ export interface SilentLoginFailureAction {
 }
 
 export const performSilentLogin = (): PerformSilentLoginAction => ({ type: PERFORM_SILENT_LOGIN });
-export const requestedSilentLogin = (credentials: UserCredentials): RequestedSilentLoginAction => ({ type: REQUESTED_SILENT_LOGIN, credentials });
-export const silentLoginSuccess = <U>(authenticatedUser: U): SilentLoginSuccessAction<U> => ({ type: SILENT_LOGIN_SUCCESS, authenticatedUser });
-export const silentLoginFailure = (failureReason: string): SilentLoginFailureAction => ({ type: SILENT_LOGIN_FAILURE, failureReason });
+export const requestedSilentLogin = (credentials: UserCredentials): RequestedSilentLoginAction => ({
+  type: REQUESTED_SILENT_LOGIN,
+  credentials,
+});
+export const silentLoginSuccess = <U>(authenticatedUser: U): SilentLoginSuccessAction<U> => ({
+  type: SILENT_LOGIN_SUCCESS,
+  authenticatedUser,
+});
+export const silentLoginFailure = (failureReason: string): SilentLoginFailureAction => ({
+  type: SILENT_LOGIN_FAILURE,
+  failureReason,
+});
 
 // Logout
 export const PERFORM_LOGOUT = 'auth/perform-logout';
@@ -88,6 +109,4 @@ export type AuthenticationAction<U> =
   | SilentLoginFailureAction
   | PerformLogoutAction
   | RequestLogoutAction
-  | LoggedOutAction
-  ;
-
+  | LoggedOutAction;

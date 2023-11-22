@@ -1,12 +1,18 @@
-﻿import { AccessTokenResponse, TokenAndType } from "../token/token-manager";
+﻿import { AccessTokenResponse, TokenAndType } from '../token/token-manager';
 
 export const SUCCESS = 'success';
 export const FAILURE = 'failure';
 
 export const LOGIN = 'login';
 export const TOKEN = 'token';
-export const createLoginCredentials = (credentials: LoginCredentials): UserCredentials => ({ credentialType: LOGIN, credentials });
-export const createTokenCredentials = (credentials: TokenCredentials): UserCredentials => ({ credentialType: TOKEN, credentials });
+export const createLoginCredentials = (credentials: LoginCredentials): UserCredentials => ({
+  credentialType: LOGIN,
+  credentials,
+});
+export const createTokenCredentials = (credentials: TokenCredentials): UserCredentials => ({
+  credentialType: TOKEN,
+  credentials,
+});
 
 /**
  * Authenticates a user with a specific credential (e.g. password, external SSO token)
@@ -17,14 +23,14 @@ export interface UserAuthenticator<U> {
 
 export type AuthenticatorResponse<U> = AuthenticatorSuccessResponse<U> | AuthenticatorFailureResponse;
 export type AuthenticatorFailureResponse = {
-  type: typeof FAILURE,
+  type: typeof FAILURE;
   error: string;
-}
+};
 export type AuthenticatorSuccessResponse<U> = {
   type: typeof SUCCESS;
   user: U;
   tokens: AccessTokenResponse;
-}
+};
 
 /**
  * Credentials used for authentication
@@ -56,4 +62,4 @@ export type UserCredentials = {
 
 export type LogoutInfo = {
   credentialType: UserCredentialsType;
-}
+};

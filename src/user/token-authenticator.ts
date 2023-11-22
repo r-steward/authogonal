@@ -1,17 +1,19 @@
 import { LogFactory } from 'logging-facade';
-import { AuthenticatorResponse, LogoutInfo, SUCCESS, TOKEN, UserAuthenticator, UserCredentials } from './user-authenticator';
+import {
+  AuthenticatorResponse,
+  LogoutInfo,
+  SUCCESS,
+  TOKEN,
+  UserAuthenticator,
+  UserCredentials,
+} from './user-authenticator';
 import { AuthUserService, TokenLoginService } from '../api/auth-service';
 import { AccessTokenResponse, TokenAndType, TokenType } from '../token/token-manager';
 
 const LOGGER = LogFactory.getLogger('api-user-authenticator');
 
 export class TokenAuthenticator<U> implements UserAuthenticator<U> {
-
-  constructor(
-    private _userService: AuthUserService<U>,
-    private _loginService: TokenLoginService
-  ) {
-  }
+  constructor(private _userService: AuthUserService<U>, private _loginService: TokenLoginService) {}
 
   async authenticate(userCredentials: UserCredentials): Promise<AuthenticatorResponse<U>> {
     if (userCredentials.credentialType === TOKEN) {
@@ -29,10 +31,9 @@ export class TokenAuthenticator<U> implements UserAuthenticator<U> {
       return {
         type: SUCCESS,
         user,
-        tokens
+        tokens,
       };
-    }
-    else {
+    } else {
       LOGGER.warn(`Incorrect credential type ${userCredentials.credentialType} received`);
       return Promise.resolve(null);
     }

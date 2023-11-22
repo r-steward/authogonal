@@ -5,12 +5,7 @@ import { AuthUserService, PasswordLoginService } from '../api/auth-service';
 const LOGGER = LogFactory.getLogger('user-password-authenticator');
 
 export class UserPasswordAuthenticator<U> implements UserAuthenticator<U> {
-
-  constructor(
-    private _userService: AuthUserService<U>,
-    private _loginService: PasswordLoginService
-  ) {
-  }
+  constructor(private _userService: AuthUserService<U>, private _loginService: PasswordLoginService) {}
 
   async authenticate(userCredentials: UserCredentials): Promise<AuthenticatorResponse<U>> {
     if (userCredentials.credentialType === LOGIN) {
@@ -24,7 +19,8 @@ export class UserPasswordAuthenticator<U> implements UserAuthenticator<U> {
       const user = await this._userService.getUserDetails(tokens.accessToken);
       return {
         type: SUCCESS,
-        user, tokens
+        user,
+        tokens,
       };
     } else {
       LOGGER.warn(`Incorrect credential type ${userCredentials.credentialType} received`);

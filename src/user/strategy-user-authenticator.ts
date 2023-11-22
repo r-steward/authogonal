@@ -1,4 +1,10 @@
-import { AuthenticatorResponse, LogoutInfo, UserAuthenticator, UserCredentials, UserCredentialsType } from './user-authenticator';
+import {
+  AuthenticatorResponse,
+  LogoutInfo,
+  UserAuthenticator,
+  UserCredentials,
+  UserCredentialsType,
+} from './user-authenticator';
 
 /**
  * Strategy decorator to handle multiple types of user authentication
@@ -21,5 +27,4 @@ export class StrategyUserAuthenticator<U> implements UserAuthenticator<U> {
       };
     }
   }
-
 }

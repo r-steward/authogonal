@@ -1,6 +1,14 @@
 import { LogFactory } from 'logging-facade';
 import { DateProvider } from '../date-provider';
-import { AccessTokenResponse, StringTokenStorage, TokenAndType, TokenAndTypeStatus, TokenExpiryDecoder, TokenManager, TokenType } from './token-manager';
+import {
+  AccessTokenResponse,
+  StringTokenStorage,
+  TokenAndType,
+  TokenAndTypeStatus,
+  TokenExpiryDecoder,
+  TokenManager,
+  TokenType,
+} from './token-manager';
 import { TokenLoginService } from '../api/auth-service';
 
 const LOGGER = LogFactory.getLogger('token-manager');
@@ -9,15 +17,13 @@ const LOGGER = LogFactory.getLogger('token-manager');
  * Manages access/refresh/remember tokens in any token storage implementation
  */
 export class DefaultTokenManager implements TokenManager {
-
   constructor(
     private readonly _accessStorage: StringTokenStorage,
     private readonly _refreshStorage: StringTokenStorage,
     private readonly _rememberMeStorage: StringTokenStorage,
     private readonly _expiryDecoder: TokenExpiryDecoder,
     private readonly _dateProvider: DateProvider,
-  ) {
-  }
+  ) {}
 
   public setTokenFromResponse(r: AccessTokenResponse): void {
     // set access and refresh if present
@@ -70,8 +76,8 @@ export class DefaultTokenManager implements TokenManager {
     return {
       isExpired: this.isTokenExpired(token),
       token,
-      type: TokenType.AccessToken
-    }
+      type: TokenType.AccessToken,
+    };
   }
 
   private getRefreshTokenStatus(): TokenAndTypeStatus {
@@ -79,8 +85,8 @@ export class DefaultTokenManager implements TokenManager {
     return {
       isExpired: this.isTokenExpired(token),
       token,
-      type: TokenType.RefreshToken
-    }
+      type: TokenType.RefreshToken,
+    };
   }
 
   private getRememberMeTokenStatus(): TokenAndTypeStatus {
@@ -88,8 +94,8 @@ export class DefaultTokenManager implements TokenManager {
     return {
       isExpired: this.isTokenExpired(token),
       token,
-      type: TokenType.RememberMeToken
-    }
+      type: TokenType.RememberMeToken,
+    };
   }
 
   private isTokenExpired(token: string) {
@@ -100,6 +106,4 @@ export class DefaultTokenManager implements TokenManager {
     const now = this._dateProvider.getDateTime();
     return tokenDate == null || tokenDate < now;
   }
-
-
 }
