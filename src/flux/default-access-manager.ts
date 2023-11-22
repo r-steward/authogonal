@@ -1,7 +1,7 @@
 
 import { AuthActions } from "./flux-actions";
 import { TokenManager, TokenType } from "../token/token-manager";
-import { SUCCESS, UserAuthenticator, UserCredentials, tokenCredentials } from "../user/user-authenticator";
+import { SUCCESS, UserAuthenticator, UserCredentials, createTokenCredentials } from "../user/user-authenticator";
 import { AccessManager, ManualLoginCallback, SilentLoginCallback } from "./access-manager";
 
 /**
@@ -23,7 +23,7 @@ export class DefaultAccessManager<U> implements AccessManager<U> {
         }
         if (!refreshTokenStatus.isExpired) {
             // TODO remove isExpired from following call
-            const credentials = tokenCredentials(refreshTokenStatus);
+            const credentials = createTokenCredentials(refreshTokenStatus);
             eventCallback(AuthActions.requestedSilentLogin(credentials));
             const auth = await this.userAuthenticator.authenticate(credentials);
             if (auth.type === SUCCESS) {
@@ -34,7 +34,7 @@ export class DefaultAccessManager<U> implements AccessManager<U> {
         }
         if (!rememberMeTokenStatus.isExpired) {
             // TODO remove isExpired from following call
-            const credentials = tokenCredentials(rememberMeTokenStatus);
+            const credentials = createTokenCredentials(rememberMeTokenStatus);
             eventCallback(AuthActions.requestedSilentLogin(credentials));
             const auth = await this.userAuthenticator.authenticate(credentials);
             if (auth.type === SUCCESS) {

@@ -64,43 +64,6 @@ export class DefaultTokenManager implements TokenManager {
     }
   }
 
-
-  // public getLatestAccessToken(): string | Promise<string> {
-  //   const t = this.getUnexpiredToken();
-  //   if (t?.type == null) return null;
-  //   // if access token is unexpired, return it
-  //   if (t.type === TokenType.AccessToken) {
-  //     return t.token;
-  //   }
-  //   // otherwise update the token from either refresh or remember me
-  //   return this.updateAccessToken(t);
-  // }
-
-  public hasUnexpiredToken(): boolean {
-    const t = this.getUnexpiredToken();
-    return t?.token != null;
-  }
-
-  public getUnexpiredToken(): TokenAndType {
-    const access = this.getUnexpiredAccessToken();
-    if (access != null) {
-      return { token: access, type: TokenType.AccessToken };
-    }
-    const refresh = this.getUnexpiredRefreshToken();
-    if (refresh != null) {
-      return { token: refresh, type: TokenType.RefreshToken };
-    }
-    const rememberMe = this.getUnexpiredRememberMeToken();
-    if (rememberMe != null) {
-      return { token: rememberMe, type: TokenType.RememberMeToken };
-    }
-    return { token: null, type: null };
-  }
-
-  public authorizationToken(): string | Promise<string> {
-    return this.getLatestAccessToken();
-  }
-
   // --- private methods ----
   private getAccessTokenStatus(): TokenAndTypeStatus {
     const token = this._accessStorage.getToken();

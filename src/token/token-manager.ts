@@ -9,6 +9,10 @@ export interface TokenAndType {
   type: TokenType;
 }
 
+export interface TokenAndTypeStatus extends TokenAndType {
+  isExpired: boolean;
+}
+
 export interface AccessTokenResponse {
   readonly accessToken: string;
   readonly refreshToken: string;
@@ -40,10 +44,8 @@ export interface TokenProvider {
 /**
  * Interface to authorization tokens
  */
-export interface TokenManager extends TokenProvider {
-  hasUnexpiredToken(): boolean;
-  getUnexpiredToken(): TokenAndType;
-  getLatestAccessToken(): string | Promise<string>;
+export interface TokenManager {
+  getToken(type: TokenType): TokenAndTypeStatus | Promise<TokenAndTypeStatus>;
   removeTokens(): void;
   setToken(t: TokenAndType): void;
   setTokenFromResponse(r: AccessTokenResponse): void;

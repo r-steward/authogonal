@@ -1,7 +1,5 @@
-import { AuthenticatorResponse, LOGIN, SUCCESS, UserAuthenticator, UserCredentials, UserCredentialsDefinition } from './user-authenticator';
+import { AuthenticatorResponse, LOGIN, LoginCredentials, SUCCESS, UserAuthenticator, UserCredentials, UserCredentialsDefinition } from './user-authenticator';
 import { isEqual } from 'lodash';
-
-export type LoginCredentials = UserCredentialsDefinition['login'];
 
 /**
  * Simple in memory authenticator to authenticate login and password attempts

@@ -5,8 +5,8 @@ export const FAILURE = 'failure';
 
 export const LOGIN = 'login';
 export const TOKEN = 'token';
-export const loginCredentials = (credentials: LoginCredentials): UserCredentials => ({ credentialType: LOGIN, credentials });
-export const tokenCredentials = (credentials: TokenCredentials): UserCredentials => ({ credentialType: TOKEN, credentials });
+export const createLoginCredentials = (credentials: LoginCredentials): UserCredentials => ({ credentialType: LOGIN, credentials });
+export const createTokenCredentials = (credentials: TokenCredentials): UserCredentials => ({ credentialType: TOKEN, credentials });
 
 /**
  * Authenticates a user with a specific credential (e.g. password, external SSO token)
