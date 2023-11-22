@@ -18,8 +18,26 @@ const userCredentials:
 
 Once a user has been authenticated, API requests can be authenticated using the RequestAuthenticator (e.g. by adding a security token to a request header)
 ```js
+import { AuthenticatorResponse, LogoutInfo, UserAuthenticator, UserCredentials, UserCredentialsDefinition } from "./user-authenticator";
+
+declare module './user-authenticator' {
+    export interface UserCredentialsDefinition {
+        bespoke: { name: string }
+    }
+}
+
+export class BespokeAuthenticator<U> implements UserAuthenticator<U> {
+    authenticate(userCredentials: UserCredentials): Promise<AuthenticatorResponse<U>> {
+        if (userCredentials.credentialType === 'bespoke') {
+
+        }
+        throw new Error("Method not implemented.");
+    }
+
 
 ```
+
+
 
 ## Token Lifecycle
 * On start up, check tokens
