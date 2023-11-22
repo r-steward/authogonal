@@ -1,5 +1,5 @@
 
-import { AuthActions } from "./flux-actions";
+import * as AuthActions from "./flux-actions";
 import { TokenManager, TokenType } from "../token/token-manager";
 import { SUCCESS, UserAuthenticator, UserCredentials, createTokenCredentials } from "../user/user-authenticator";
 import { AccessManager, ManualLoginCallback, SilentLoginCallback } from "./access-manager";

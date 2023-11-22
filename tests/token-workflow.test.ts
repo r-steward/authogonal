@@ -6,7 +6,8 @@ import { TokenExpiryDecoderStringSeparated } from '../src/token/token-expiry-dec
 import { DefaultTokenManager } from '../src/token/default-token-manager';
 import { AuthUserService, PasswordLoginService, TokenLoginService } from '../src/api/auth-service';
 import { DefaultAccessManager } from '../src/flux/default-access-manager';
-import { AuthActions, LOGIN, StrategyUserAuthenticator, TOKEN, TokenAuthenticator, UserAuthenticator, UserCredentials, UserPasswordAuthenticator, createLoginCredentials } from '../src/'
+import * as AuthActions from '../src/flux/flux-actions';
+import { LOGIN, StrategyUserAuthenticator, TOKEN, TokenAuthenticator, UserAuthenticator, UserCredentials, UserPasswordAuthenticator, createLoginCredentials } from '../src/'
 
 describe('Test Request Authenticator', () => {
 
@@ -45,8 +46,13 @@ describe('Test Request Authenticator', () => {
     }));
     const EventCallbackMocker = jest.fn<(e: any) => void, []>();
 
-    const UserServiceMocker = jest.fn<AuthUserService<TestUser>, [any, any]>((loginFail, userDetailsFail) => ({
-        getUserDetails: jest.fn((accessToken: string): Promise<TestUser> => { return Promise.resolve(testUserInstance) })
+    const UserServiceMocker = jest.fn<AuthUserService<TestUser>, [string, TestUser, any]>((token, userInstance, userDetailsFail) => ({
+        getUserDetails: jest.fn((accessToken: string): Promise<TestUser> => {
+            if (accessToken === token) {
+                return Promise.resolve(userInstance);
+            }
+            return Promise.reject(userDetailsFail);
+        })
     }));
     // loginWithUserId: jest.fn((username: string, password: string, remember: boolean): Promise<AccessTokenResponse> => {
     //     if (username === testUserInstance.username && password === testUserPassword) {
@@ -75,7 +81,7 @@ describe('Test Request Authenticator', () => {
             rememberMeToken: testUserAccessToken,
             loginFail: new Error('Login Error')
         }
-        const userService = new UserServiceMocker('', '');
+        const userService = new UserServiceMocker(testUserInstance.username, testUserInstance, '');
         const loginServices = new LoginServiceMocker(loginSetup);
         const authenticator = new StrategyUserAuthenticator(new Map([
             [LOGIN, <UserAuthenticator<TestUser>>new UserPasswordAuthenticator(userService, loginServices)],

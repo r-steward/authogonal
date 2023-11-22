@@ -1,5 +1,5 @@
 import { AuthenticationState } from './authentication-state';
-import { AuthActions } from '../flux-actions';
+import * as AuthActions from '../flux-actions';
 
 const baseState: AuthenticationState<any> = { isAuthorized: false, actionState: {} };
 

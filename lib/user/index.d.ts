@@ -1,5 +1,3 @@
-// created from 'create-ts-index'
-
 export * from './memory-user-authenticator';
 export * from './strategy-user-authenticator';
 export * from './token-authenticator';
