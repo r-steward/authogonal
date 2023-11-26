@@ -1,7 +1,7 @@
 export enum TokenType {
-  AccessToken,
-  RefreshToken,
-  RememberMeToken,
+  AccessToken = 'AccessToken',
+  RefreshToken = 'RefreshToken',
+  RememberMeToken = 'RememberMeToken',
 }
 
 export interface TokenAndType {

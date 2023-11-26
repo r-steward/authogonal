@@ -1,4 +1,4 @@
-import { UserCredentials } from "../user/user-authenticator";
+import { UserCredentials } from '../user/user-authenticator';
 export type EventCallback<U> = (action: AuthenticationAction<U>) => void;
 export declare const PERFORM_MANUAL_LOGIN = "auth/perform-manual-login";
 export interface PerformManualLoginAction {

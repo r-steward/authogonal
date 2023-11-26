@@ -1,4 +1,5 @@
-import { AccessTokenResponse, TokenAndType } from "../token/token-manager";
+import { Logger } from 'logging-facade';
+import { AccessTokenResponse, TokenAndType } from '../token/token-manager';
 export declare const SUCCESS = "success";
 export declare const FAILURE = "failure";
 export declare const LOGIN = "login";
@@ -21,6 +22,9 @@ export type AuthenticatorSuccessResponse<U> = {
     user: U;
     tokens: AccessTokenResponse;
 };
+export declare const createSuccessResponse: <U>(user: U, tokens: AccessTokenResponse) => AuthenticatorSuccessResponse<U>;
+export declare const createErrorResponse: (error: string) => AuthenticatorFailureResponse;
+export declare const resolveErrorOnIncorrectType: (logger: Logger, type: UserCredentialsType) => Promise<AuthenticatorFailureResponse>;
 /**
  * Credentials used for authentication
  * Credential type may vary depending on authentication method

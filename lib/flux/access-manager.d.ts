@@ -1,5 +1,5 @@
-import { UserCredentials } from "../user/user-authenticator";
-import * as AuthActions from "./flux-actions";
+import { UserCredentials } from '../user/user-authenticator';
+import * as AuthActions from './flux-actions';
 type SilentLoginActions<U> = AuthActions.RequestedSilentLoginAction | AuthActions.SilentLoginSuccessAction<U> | AuthActions.SilentLoginFailureAction;
 type ManualLoginActions<U> = AuthActions.RequestedManualLoginAction | AuthActions.ManualLoginSuccessAction<U> | AuthActions.ManualLoginFailureAction;
 export type SilentLoginCallback<U> = (event: SilentLoginActions<U>) => void;

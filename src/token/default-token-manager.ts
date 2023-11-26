@@ -9,9 +9,8 @@ import {
   TokenManager,
   TokenType,
 } from './token-manager';
-import { TokenLoginService } from '../api/auth-service';
 
-const LOGGER = LogFactory.getLogger('token-manager');
+const LOGGER = LogFactory.getLogger('DefaultTokenManager');
 
 /**
  * Manages access/refresh/remember tokens in any token storage implementation
@@ -23,7 +22,7 @@ export class DefaultTokenManager implements TokenManager {
     private readonly _rememberMeStorage: StringTokenStorage,
     private readonly _expiryDecoder: TokenExpiryDecoder,
     private readonly _dateProvider: DateProvider,
-  ) {}
+  ) { }
 
   public setTokenFromResponse(r: AccessTokenResponse): void {
     // set access and refresh if present
@@ -104,6 +103,9 @@ export class DefaultTokenManager implements TokenManager {
     }
     const tokenDate = this._expiryDecoder.decode(token);
     const now = this._dateProvider.getDateTime();
-    return tokenDate == null || tokenDate < now;
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug(`Checking token expiry: token date <${tokenDate}> should be less than <${now}>`)
+    }
+    return tokenDate == null || tokenDate >= now;
   }
 }

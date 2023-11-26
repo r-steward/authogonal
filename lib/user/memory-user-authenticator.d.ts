@@ -12,5 +12,4 @@ export declare class InMemoryUserAuthenticator<U> implements UserAuthenticator<U
         user: U;
     }>, errorMessage: string, delay?: number);
     authenticate(userCredentials: UserCredentials): Promise<AuthenticatorResponse<U>>;
-    logout(): Promise<void>;
 }

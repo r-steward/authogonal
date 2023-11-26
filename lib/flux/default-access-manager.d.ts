@@ -1,6 +1,6 @@
-import { TokenManager } from "../token/token-manager";
-import { UserAuthenticator, UserCredentials } from "../user/user-authenticator";
-import { AccessManager, ManualLoginCallback, SilentLoginCallback } from "./access-manager";
+import { TokenManager } from '../token/token-manager';
+import { UserAuthenticator, UserCredentials } from '../user/user-authenticator';
+import { AccessManager, ManualLoginCallback, SilentLoginCallback } from './access-manager';
 /**
  * Access manager that uses ARR token model
  */

@@ -1,11 +1,36 @@
 # `Authogonal`
-Typescript Client Authentication Library
+### Typescript Client Authentication Library
 
-Provides functionality for logging into a web service, and managing tokens that allow SPA to work seamlessly with 
+Authogonal provides functionality for authenticated web service access, managing login and tokens that allow SPA to work seamlessly with back end authenticated requests.
+It is designed primarily to easily integrate with an event based state management UI (e.g. react with redux).
+The implementation is framework agnostic, to allow any side-effect managment style to be used (e.g. thunks, sagas, or observables)
 
+### Quick Start
 
-The main interface to the authentication library is the UserAuthenticator.
-```js
+```ts
+const accessManager = newAccessManagerBuilder().build();
+
+```
+
+The main interface to the authentication library is the AccessManager.
+```ts
+interface AccessManager {
+  silentLogin(eventCallback: SilentLoginCallback<U>): Promise<boolean>;
+  manualLogin(credentials: UserCredentials, eventCallback: ManualLoginCallback<U>): Promise<boolean>;
+  onUnauthorized(eventCallback: AuthActions.EventCallback<U>): Promise<boolean>;
+}
+```
+These methods and event callbacks allow you to call authentication functionality, and forward authentication events, via your particular side-effect management implementation.
+
+The request enricher supplements back end requests with appropriate authentication once a user has been authenticated (e.g. auth tokens)
+```ts
+export interface RequestEnricher<R> {
+  authorizeRequest(request: R): Promise<R>;
+}
+```
+### API services
+
+```ts
 export interface UserAuthenticator<U> {
   authenticate(userCredentials: UserCredentials): Promise<U>;
   logout(logoutInfo: LogoutInfo): Promise<void>;

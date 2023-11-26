@@ -1,13 +1,14 @@
+import { isEqual } from 'lodash';
+import { AccessTokenResponse } from '../token';
 import {
   AuthenticatorResponse,
   LOGIN,
   LoginCredentials,
-  SUCCESS,
   UserAuthenticator,
   UserCredentials,
-  UserCredentialsDefinition,
+  createErrorResponse,
+  createSuccessResponse
 } from './user-authenticator';
-import { isEqual } from 'lodash';
 
 /**
  * Simple in memory authenticator to authenticate login and password attempts
@@ -27,27 +28,22 @@ export class InMemoryUserAuthenticator<U> implements UserAuthenticator<U> {
     this._errorMessage = errorMessage;
     this._delay = delay;
   }
+
   authenticate(userCredentials: UserCredentials): Promise<AuthenticatorResponse<U>> {
     if (userCredentials.credentialType === LOGIN) {
       const credential = userCredentials.credentials;
       const entry = this._userMap.get(credential.userId);
       if (entry != null && isEqual(entry.credential, credential.password)) {
+        const tokens: AccessTokenResponse = null;
         return new Promise<AuthenticatorResponse<U>>(resolve => {
           setTimeout(() => {
-            resolve({ user: entry.user, tokens: null, type: SUCCESS });
+            resolve(createSuccessResponse(entry.user, tokens));
           }, this._delay);
         });
       } else {
-        return Promise.reject({
-          userCredentials,
-          loginMessage: this._errorMessage,
-        });
+        return Promise.resolve(createErrorResponse(this._errorMessage));
       }
     }
   }
 
-  public logout(): Promise<void> {
-    // do nothing
-    return Promise.resolve();
-  }
 }

@@ -1,9 +1,9 @@
 import {
   AuthenticatorResponse,
-  LogoutInfo,
   UserAuthenticator,
   UserCredentials,
   UserCredentialsType,
+  createErrorResponse,
 } from './user-authenticator';
 
 /**
@@ -21,10 +21,7 @@ export class StrategyUserAuthenticator<U> implements UserAuthenticator<U> {
     if (service != null) {
       return await service.authenticate(userCredentials);
     } else {
-      throw {
-        userCredentials,
-        loginMessage: 'No service',
-      };
+      return createErrorResponse(`No authenticator configured for credentials ${userCredentials.credentialType}`);
     }
   }
 }
