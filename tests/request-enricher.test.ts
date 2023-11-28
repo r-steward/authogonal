@@ -27,7 +27,7 @@ describe('Test Request Authenticator', () => {
 
     test('Test token request header', async () => {
         // arrange
-        const provider: TokenProvider = { authorizationToken: () => 'testToken' };
+        const provider: TokenProvider = { authorizationToken: () => Promise.resolve('testToken') };
         const authorizer = new TokenRequestEnricher(provider);
         const expected = 'testToken';
         // act

@@ -1,7 +1,8 @@
 import { LogFactory } from 'logging-facade';
 import { DateProvider } from '../date-provider';
 import {
-  AccessTokenResponse,
+  LifecycleTokens,
+  RefreshTokensStatus,
   StringTokenStorage,
   TokenAndType,
   TokenAndTypeStatus,
@@ -16,6 +17,8 @@ const LOGGER = LogFactory.getLogger('DefaultTokenManager');
  * Manages access/refresh/remember tokens in any token storage implementation
  */
 export class DefaultTokenManager implements TokenManager {
+  private refreshInProgress: Promise<LifecycleTokens>;
+
   constructor(
     private readonly _accessStorage: StringTokenStorage,
     private readonly _refreshStorage: StringTokenStorage,
@@ -24,19 +27,53 @@ export class DefaultTokenManager implements TokenManager {
     private readonly _dateProvider: DateProvider,
   ) { }
 
-  public setTokenFromResponse(r: AccessTokenResponse): void {
-    // set access and refresh if present
-    if (r?.accessToken != null && r?.refreshToken != null) {
-      this.setToken({ token: r.accessToken, type: TokenType.AccessToken });
-      this.setToken({ token: r.refreshToken, type: TokenType.RefreshToken });
-    }
-    // set remember me if present
-    if (r?.rememberMeToken != null) {
-      this.setToken({ token: r.rememberMeToken, type: TokenType.RememberMeToken });
+  public get hasTokens(): boolean {
+    return this.refreshInProgress != null || this._accessStorage.getToken() != null;
+  }
+
+  public refreshTokens(refreshInProgress: Promise<LifecycleTokens>) {
+    this.refreshInProgress = refreshInProgress;
+    this.refreshInProgress.then(t => this.setTokenFromResponse(t));
+  }
+
+  public getTokensForRefresh(): RefreshTokensStatus {
+    return {
+      refreshTokenStatus: this.getRefreshTokenStatus(),
+      rememberMeTokenStatus: this.getRememberMeTokenStatus()
     }
   }
 
-  public setToken(t: TokenAndType) {
+  public async accessTokenRemaining(): Promise<number> {
+    if (this.refreshInProgress != null) {
+      await this.refreshInProgress;
+    }
+    const token = this._accessStorage.getToken();
+    return this.tokenHeadroom(token);
+  }
+
+  public removeTokens(): void {
+    this._accessStorage.deleteToken();
+    this._refreshStorage.deleteToken();
+    this._rememberMeStorage.deleteToken();
+  }
+
+  // --- private methods ----
+
+  private setTokenFromResponse(r: LifecycleTokens): void {
+    if (r == null) {
+      this.removeTokens();
+    } else {
+      // set access and refresh
+      this.setToken({ token: r.accessToken, type: TokenType.AccessToken });
+      this.setToken({ token: r.refreshToken, type: TokenType.RefreshToken });
+      // set remember me if present
+      if (r.rememberMeToken != null) {
+        this.setToken({ token: r.rememberMeToken, type: TokenType.RememberMeToken });
+      }
+    }
+  }
+
+  private setToken(t: TokenAndType) {
     switch (t?.type) {
       case TokenType.AccessToken:
         this._accessStorage.setToken(t.token);
@@ -50,13 +87,10 @@ export class DefaultTokenManager implements TokenManager {
     }
   }
 
-  public removeTokens(): void {
-    this._accessStorage.deleteToken();
-    this._refreshStorage.deleteToken();
-    this._rememberMeStorage.deleteToken();
-  }
-
-  public getToken(type: TokenType): TokenAndTypeStatus | Promise<TokenAndTypeStatus> {
+  public async getToken(type: TokenType): Promise<TokenAndTypeStatus> {
+    if (this.refreshInProgress != null) {
+      await this.refreshInProgress;
+    }
     switch (type) {
       case TokenType.AccessToken:
         return this.getAccessTokenStatus();
@@ -69,7 +103,6 @@ export class DefaultTokenManager implements TokenManager {
     }
   }
 
-  // --- private methods ----
   private getAccessTokenStatus(): TokenAndTypeStatus {
     const token = this._accessStorage.getToken();
     return {
@@ -95,6 +128,19 @@ export class DefaultTokenManager implements TokenManager {
       token,
       type: TokenType.RememberMeToken,
     };
+  }
+
+  private tokenHeadroom(token: string) {
+    if (token == null) {
+      return 0;
+    }
+    const tokenDate = this._expiryDecoder.decode(token);
+    const now = this._dateProvider.getDateTime();
+    const diff = tokenDate.getTime() - now.getTime();
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug(`Checking token headroom: token expiry is <${diff / 1000}> seconds from now`);
+    }
+    return diff;
   }
 
   private isTokenExpired(token: string) {

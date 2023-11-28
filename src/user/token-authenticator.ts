@@ -1,6 +1,6 @@
 import { LogFactory } from 'logging-facade';
 import { AuthUserService, TokenLoginService } from '../api/auth-service';
-import { AccessTokenResponse, TokenAndType, TokenType } from '../token/token-manager';
+import { LifecycleTokens, TokenAndType, TokenType } from '../token/token-manager';
 import {
   AuthenticatorResponse,
   TOKEN,
@@ -26,7 +26,7 @@ export class TokenAuthenticator<U> implements UserAuthenticator<U> {
   }
 
   private async authenticateToken(credential: TokenAndType): Promise<AuthenticatorResponse<U>> {
-    let tokens: AccessTokenResponse = null;
+    let tokens: LifecycleTokens = null;
     let user: U = null;
     try {
       switch (credential.type) {

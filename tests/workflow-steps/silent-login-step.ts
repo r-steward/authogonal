@@ -60,16 +60,18 @@ export const testLoginAttempt = async <U>(
         isAuthorized: false
     }
     // act
-    console.log('About to do silent login');
-    const loggedInP1 = context.accessManager.silentLogin(context.mockEventCallback);
-    const loggedInP2 = context.accessManager.silentLogin(context.mockEventCallback);
-    const loggedInP3 = context.accessManager.silentLogin(context.mockEventCallback);
-    loggedInP1.then(i => console.log('Resolve p1'));
-    loggedInP2.then(i => console.log('Resolve p2'));
-    loggedInP3.then(i => console.log('Resolve p3'));
-    console.log('now wait for silent login');
-    const loggedIn = await loggedInP1;
-    console.log('Done silent login with', loggedIn);
+    const loggedIn = await context.accessManager.silentLogin(context.mockEventCallback);
+
+    // console.log('About to do silent login');
+    // const loggedInP1 = context.accessManager.silentLogin(context.mockEventCallback);
+    // const loggedInP2 = context.accessManager.silentLogin(context.mockEventCallback);
+    // const loggedInP3 = context.accessManager.silentLogin(context.mockEventCallback);
+    // loggedInP1.then(i => console.log('Resolve p1'));
+    // loggedInP2.then(i => console.log('Resolve p2'));
+    // loggedInP3.then(i => console.log('Resolve p3'));
+    // console.log('now wait for silent login');
+    // const loggedIn = await loggedInP1;
+    // console.log('Done silent login with', loggedIn);
     // assert
     const eventCallbackIndex = context.callCounts.eventCallback;
     context.callCounts.loginWithRefreshToken += expectedCallCounts.loginWithRefreshToken;

@@ -1,5 +1,5 @@
 ﻿import { Logger } from 'logging-facade';
-import { AccessTokenResponse, TokenAndType } from '../token/token-manager';
+import { LifecycleTokens, TokenAndType } from '../token/token-manager';
 
 export const SUCCESS = 'success';
 export const FAILURE = 'failure';
@@ -30,9 +30,9 @@ export type AuthenticatorFailureResponse = {
 export type AuthenticatorSuccessResponse<U> = {
   type: typeof SUCCESS;
   user: U;
-  tokens: AccessTokenResponse;
+  tokens: LifecycleTokens;
 };
-export const createSuccessResponse = <U>(user: U, tokens: AccessTokenResponse): AuthenticatorSuccessResponse<U> => ({ type: SUCCESS, user, tokens });
+export const createSuccessResponse = <U>(user: U, tokens: LifecycleTokens): AuthenticatorSuccessResponse<U> => ({ type: SUCCESS, user, tokens });
 export const createErrorResponse = (error: string): AuthenticatorFailureResponse => ({ type: FAILURE, error });
 export const resolveErrorOnIncorrectType = (logger: Logger, type: UserCredentialsType) => {
   const msg = `Incorrect credential type ${type} received`;

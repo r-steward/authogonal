@@ -49,6 +49,11 @@ export interface PerformSilentLoginAction {
   type: typeof PERFORM_SILENT_LOGIN;
 }
 
+export const PERFORM_REFRESH_LOGIN = 'auth/perform-refresh-login';
+export interface PerformRefreshLoginAction {
+  type: typeof PERFORM_REFRESH_LOGIN;
+}
+
 export const REQUESTED_SILENT_LOGIN = 'auth/requested-silent-login';
 export interface RequestedSilentLoginAction {
   type: typeof REQUESTED_SILENT_LOGIN;
@@ -67,7 +72,8 @@ export interface SilentLoginFailureAction {
   failureReason: string;
 }
 
-export const performSilentLogin = (): PerformSilentLoginAction => ({ type: PERFORM_SILENT_LOGIN });
+export const performSilentLogin: PerformSilentLoginAction = Object.freeze({ type: PERFORM_SILENT_LOGIN });
+export const refreshSilentLogin: PerformRefreshLoginAction = Object.freeze({ type: PERFORM_REFRESH_LOGIN });
 export const requestedSilentLogin = (credentials: UserCredentials): RequestedSilentLoginAction => ({
   type: REQUESTED_SILENT_LOGIN,
   credentials,
@@ -97,6 +103,10 @@ export interface LoggedOutAction {
   type: typeof LOGGED_OUT;
 }
 
+export const performLogout: PerformLogoutAction = Object.freeze({ type: PERFORM_LOGOUT });
+export const requestedLogout: RequestLogoutAction = Object.freeze({ type: REQUESTED_LOGOUT });
+export const loggedOut: LoggedOutAction = Object.freeze({ type: LOGGED_OUT });
+
 // All Actions
 export type AuthenticationAction<U> =
   | PerformManualLoginAction
@@ -104,6 +114,7 @@ export type AuthenticationAction<U> =
   | ManualLoginSuccessAction<U>
   | ManualLoginFailureAction
   | PerformSilentLoginAction
+  | PerformRefreshLoginAction
   | RequestedSilentLoginAction
   | SilentLoginSuccessAction<U>
   | SilentLoginFailureAction

@@ -13,7 +13,12 @@ export interface TokenAndTypeStatus extends TokenAndType {
   isExpired: boolean;
 }
 
-export interface AccessTokenResponse {
+export interface RefreshTokensStatus {
+  readonly refreshTokenStatus: TokenAndTypeStatus;
+  readonly rememberMeTokenStatus: TokenAndTypeStatus;
+}
+
+export interface LifecycleTokens {
   readonly accessToken: string;
   readonly refreshToken: string;
   readonly rememberMeToken?: string;
@@ -38,15 +43,17 @@ export interface TokenExpiryDecoder {
  * Provides the current authorization token for API requests
  */
 export interface TokenProvider {
-  authorizationToken(): string | Promise<string>;
+  authorizationToken(): Promise<string>;
 }
 
 /**
  * Interface to authorization tokens
  */
 export interface TokenManager {
-  getToken(type: TokenType): TokenAndTypeStatus | Promise<TokenAndTypeStatus>;
+  hasTokens: boolean;
+  accessTokenRemaining(): Promise<number>;
+  getToken(type: TokenType): Promise<TokenAndTypeStatus>;
+  getTokensForRefresh(): RefreshTokensStatus;
+  refreshTokens(r: Promise<LifecycleTokens>): void;
   removeTokens(): void;
-  setToken(t: TokenAndType): void;
-  setTokenFromResponse(r: AccessTokenResponse): void;
 }

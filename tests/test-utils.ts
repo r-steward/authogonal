@@ -1,5 +1,5 @@
 import { LogFactory } from 'logging-facade';
-import { AccessManager, AccessTokenResponse, AuthenticationAction, AuthenticationState, DateProvider, DefaultAccessManager, DefaultTokenManager, EventCallback, LOGIN, MemoryStorage, StateHandler, StrategyUserAuthenticator, TOKEN, TokenAuthenticator, TokenExpiryDecoderStringSeparated, UserAuthenticator, UserPasswordAuthenticator, baseState, createSuccessResponse, handleAuthAction } from '../src';
+import { AccessManager, LifecycleTokens, AllTokenStorage, AuthenticationAction, AuthenticationState, DateProvider, DefaultAccessManager, DefaultTokenManager, EventCallback, LOGIN, MemoryStorage, StateHandler, StrategyUserAuthenticator, TOKEN, TokenAuthenticator, TokenExpiryDecoderStringSeparated, TokenManager, UserAuthenticator, UserPasswordAuthenticator, baseState, createSuccessResponse, handleAuthAction, newAccessManagerBuilder } from '../src';
 import { AuthUserService, PasswordLoginService, TokenLoginService } from '../src/api/auth-service';
 const LOGGER = LogFactory.getLogger('TestUtils');
 
@@ -21,17 +21,12 @@ export type ExpectedSilentLoginCallCounts = {
     eventCallback: number;
 }
 
-export type TokenStorage = {
-    accessToken: MemoryStorage;
-    refreshToken: MemoryStorage;
-    rememberMeToken: MemoryStorage;
-}
-
 // Workflow context
 export type WorkflowTestContext<U> = {
     serviceStub: ServiceStub<U>;
     eventCallbackStub: EventCallbackStub<U>;
-    tokenStorage: TokenStorage;
+    tokenManager: TokenManager;
+    tokenStorage: AllTokenStorage;
     mockServices: PasswordLoginService & TokenLoginService & AuthUserService<U>;
     mockEventCallback: EventCallback<U>;
     accessManager: AccessManager<U>;
@@ -41,14 +36,13 @@ export type WorkflowTestContext<U> = {
 
 export function createTestContext<U>(): WorkflowTestContext<U> {
     let context: WorkflowTestContext<U> = null as unknown as WorkflowTestContext<U>;
-    const eventCallbackStub = new EventCallbackStub(handleAuthAction, baseState);
+
+    // services
     const serviceStub = new ServiceStub<U>();
     const mockServices = createMockService<U>(serviceStub);
-    const authenticator = new StrategyUserAuthenticator(new Map([
-        [LOGIN, <UserAuthenticator<U>>new UserPasswordAuthenticator(mockServices, mockServices)],
-        [TOKEN, <UserAuthenticator<U>>new TokenAuthenticator(mockServices, mockServices)]
-    ]))
-    const tokenStorage: TokenStorage = {
+
+    // access manager
+    const tokenStorage: AllTokenStorage = {
         accessToken: new MemoryStorage(),
         refreshToken: new MemoryStorage(),
         rememberMeToken: new MemoryStorage()
@@ -60,10 +54,22 @@ export function createTestContext<U>(): WorkflowTestContext<U> {
         new TokenExpiryDecoderStringSeparated('.'),
         new DateProviderMocker(() => context.currentDate),
     );
+    const accessManager = newAccessManagerBuilder<U>()
+        .setPasswordLoginService(mockServices)
+        .setTokenLoginService(mockServices)
+        .setUserService(mockServices)
+        .setTokenManager(tokenManager)
+        .setDateProvider(new DateProviderMocker(() => context.currentDate))
+        .build();
+
+    // event callbacks
+    const eventCallbackStub = new EventCallbackStub(handleAuthAction, baseState);
     const mockEventCallback = createMockEventCallback(eventCallbackStub);
-    const accessManager = new DefaultAccessManager(authenticator, tokenManager);
+
+    // create context
     context = {
         accessManager,
+        tokenManager,
         eventCallbackStub,
         serviceStub,
         tokenStorage,
@@ -89,13 +95,13 @@ export function createTestContext<U>(): WorkflowTestContext<U> {
  */
 export const createMockService = <U>(serviceStub: ServiceStub<U>) => {
     const ServiceMocker = jest.fn<PasswordLoginService & TokenLoginService & AuthUserService<U>, [ServiceStub<U>]>((stub: ServiceStub<U>) => ({
-        loginWithUserId: jest.fn((username, password, remember): Promise<AccessTokenResponse> => {
+        loginWithUserId: jest.fn((username, password, remember): Promise<LifecycleTokens> => {
             return stub.loginWithUserId(username, password, remember);
         }),
-        loginWithRefreshToken: jest.fn((refreshToken: string): Promise<AccessTokenResponse> => {
+        loginWithRefreshToken: jest.fn((refreshToken: string): Promise<LifecycleTokens> => {
             return stub.loginWithRefreshToken(refreshToken);
         }),
-        loginWithRememberMeToken: jest.fn((rememberMeToken: string): Promise<AccessTokenResponse> => {
+        loginWithRememberMeToken: jest.fn((rememberMeToken: string): Promise<LifecycleTokens> => {
             return stub.loginWithRememberMeToken(rememberMeToken);
         }),
         getUserDetails: jest.fn((accessToken: string): Promise<U> => {
@@ -105,15 +111,36 @@ export const createMockService = <U>(serviceStub: ServiceStub<U>) => {
     return new ServiceMocker(serviceStub);
 };
 
-export const createMockEventCallback = <U>(stub: EventCallbackStub<U>) => {
+/**
+ * Mocks the event callback which receives flux events from the access manager calls
+ */
+export const createMockEventCallback = <U>(stub?: EventCallbackStub<U>) => {
     return jest.fn((e: AuthenticationAction<U>) => {
-        stub.onCallback(e);
+        stub?.onCallback(e);
     });
 };
 
 export const DateProviderMocker = jest.fn<DateProvider, [() => Date]>((date: () => Date) => ({
     getDateTime: jest.fn(date),
 }));
+
+export interface MockRequestLike {
+    set(field: string, val: string): this;
+    request(): Promise<ResponseLike>;
+}
+export interface ResponseLike {
+    status: number;
+}
+
+export const createMockRequest = (response: Promise<ResponseLike>) => {
+    let requestMocker: MockRequestLike;
+    const RequestMocker = jest.fn<MockRequestLike, []>(() => ({
+        set: jest.fn(() => requestMocker),
+        request: jest.fn(() => response),
+    }));
+    requestMocker = new RequestMocker();
+    return requestMocker;
+};
 
 // Stubs
 
@@ -151,15 +178,15 @@ export class ServiceStub<U> implements PasswordLoginService, TokenLoginService, 
         this.userMap.set(username, { user, password, remember: false, ...tokens });
     }
 
-    loginWithRefreshToken(refreshToken: string): Promise<AccessTokenResponse> {
+    loginWithRefreshToken(refreshToken: string): Promise<LifecycleTokens> {
         return this.loginWithToken(refreshToken, i => i.refreshToken === refreshToken);
     }
 
-    loginWithRememberMeToken(rememberMeToken: string): Promise<AccessTokenResponse> {
+    loginWithRememberMeToken(rememberMeToken: string): Promise<LifecycleTokens> {
         return this.loginWithToken(rememberMeToken, i => i.rememberMeToken === rememberMeToken);
     }
 
-    loginWithUserId(username: string, password: string, remember: boolean): Promise<AccessTokenResponse> {
+    loginWithUserId(username: string, password: string, remember: boolean): Promise<LifecycleTokens> {
         const entry = this.userMap.get(username);
         if (entry?.password === password) {
             entry.remember = remember;
@@ -170,7 +197,7 @@ export class ServiceStub<U> implements PasswordLoginService, TokenLoginService, 
         return this.getResponse(username, entry?.password === password ? entry : undefined);
     }
 
-    private loginWithToken(name: string, predicate: (e: LoginEntry<U>) => boolean): Promise<AccessTokenResponse> {
+    private loginWithToken(name: string, predicate: (e: LoginEntry<U>) => boolean): Promise<LifecycleTokens> {
         const entry = Array.from(this.userMap.values()).find(predicate);
         if (entry) {
             entry.accessToken = this.serverSideTokens.accessToken;
@@ -181,13 +208,22 @@ export class ServiceStub<U> implements PasswordLoginService, TokenLoginService, 
     }
 
 
-    private getResponse(name: string, entry: LoginEntry<U> | undefined): Promise<AccessTokenResponse> {
+    private getResponse(name: string, entry: LoginEntry<U> | undefined): Promise<LifecycleTokens> {
         if (!entry) {
             return Promise.reject(new Error(`Failed to login with ${name}`));
         }
         return Promise.resolve({ accessToken: entry!.accessToken!, refreshToken: entry!.refreshToken! });
     }
 
+}
+
+export class StubApiCall {
+    public readonly fieldMap: Map<string, string> = new Map();
+
+    set(field: string, val: string): this {
+        this.fieldMap.set(field, val);
+        return this;
+    }
 }
 
 /**

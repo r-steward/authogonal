@@ -7,11 +7,97 @@ The implementation is framework agnostic, to allow any side-effect managment sty
 
 ### Quick Start
 
-```ts
-const accessManager = newAccessManagerBuilder().build();
+The following is a quick start example with a redux set up.
 
+#### State Management
+An action handler is provided to handle the authentication state.
+
+```ts
+import * as Authogonal from 'authogonal';
+
+// Set an authentication slice on the app state
+export interface AppState {
+    authentication: AuthenticationState;
+    /* rest of the app state*/
+}
+
+// Set the provided handler on the reducer
+const rootReducer = combineReducers({
+    authentication: Authogonal.handleAuthAction,
+    /* Other app reducers */
+});
+
+// Create redux store
+const reduxStore = createStore(rootReducer, ... middleware ...);
 ```
 
+#### Side effects
+The side effect management depends on the framework used (e.g. thunks, or observables).
+Helper classes and functions are provided to enable integration with whatever side effect management style is used.
+
+```ts
+import * as Authogonal from 'authogonal';
+
+// create the access manager using the provided builder, with required services
+const accessManager = Authogonal.newAccessManagerBuilder<AppUser>()
+  .setPasswordLoginService(passwordLoginService)
+  .setTokenLoginService(tokenLoginService)
+  .setUserService(userService)
+  .build();
+
+// If using redux thunk, you can use the provided action creator
+const actionCreator = new Authogonal.AuthogonalActionCreator(accessManager);
+actionCreator.initializeRefresh(dispatch);
+const onLogin = async (userId: string, password: string): Promise<boolean> => {
+  const loginCredentials = Authogonal.createLoginCredentials({ userId, password,remember: true});
+  const loginThunk = actionCreator.createManualLoginAction(loginCredentials)
+  return await dispatch(loginThunk);
+}
+
+// For redux-observable, set up epics using provided callback converters
+accessManager.setRefreshTimerCallback(dispatch);
+const onRefreshRequired = (action$: Observable<Authogonal.PerformRefreshLoginAction>) => {
+    return action$.pipe(
+        ofType(Authogonal.PERFORM_REFRESH_LOGIN),
+        switchMap(event => {
+            return new Observable<Authogonal.SilentLoginActions<AppUer>>(observer => {
+                accessManager.silentLogin(Authogonal.observerToSilentLoginCallback(observer));
+            })
+        })
+    );
+}
+const onManualLogin = (action$: Observable<Authogonal.PerformManualLoginAction>) => {
+    return action$.pipe(
+        ofType(Authogonal.PERFORM_MANUAL_LOGIN),
+        switchMap(event => {
+            return new Observable<Authogonal.ManualLoginActions<AppUser>>(observer => {
+                accessManager.manualLogin(event.credentials, Authogonal.observerToManualLoginCallback(observer));
+            })
+        })
+    );
+}
+const rootEpic = combineEpics(
+    onRefreshRequired,
+    onManualLogin
+)
+```
+
+#### Request enrichment
+API requests can be enriched with authorization tokens using the supplied request enrichers.
+For example, with SuperAgent
+
+```ts
+        const req = Request.post(uri).send(body);
+        const authed = (authAppender != null ? authAppender.authorizeRequest(req) : req);
+        try {
+            const response = await authed;
+
+
+```
+For side effects, there are some helpers provided for use with thunk or observable
+
+
+### Documentation
 The main interface to the authentication library is the AccessManager.
 ```ts
 interface AccessManager {

@@ -1,5 +1,5 @@
 import { isEqual } from 'lodash';
-import { AccessTokenResponse } from '../token';
+import { LifecycleTokens } from '../token';
 import {
   AuthenticatorResponse,
   LOGIN,
@@ -34,7 +34,7 @@ export class InMemoryUserAuthenticator<U> implements UserAuthenticator<U> {
       const credential = userCredentials.credentials;
       const entry = this._userMap.get(credential.userId);
       if (entry != null && isEqual(entry.credential, credential.password)) {
-        const tokens: AccessTokenResponse = null;
+        const tokens: LifecycleTokens = null;
         return new Promise<AuthenticatorResponse<U>>(resolve => {
           setTimeout(() => {
             resolve(createSuccessResponse(entry.user, tokens));
