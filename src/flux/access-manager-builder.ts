@@ -150,8 +150,8 @@ class DefaultAccessManagerBuilder<TUser, TRequest extends RequestLike> implement
             const passwordLoginService = this.getPasswordLoginService();
             const tokenLoginService = this.getTokenLoginService();
             this._userAuthenticator = new StrategyUserAuthenticator(new Map([
-                [LOGIN, <UserAuthenticator<TUser>>new UserPasswordAuthenticator(userService, passwordLoginService)],
-                [TOKEN, <UserAuthenticator<TUser>>new TokenAuthenticator(userService, tokenLoginService)]
+                [LOGIN, new UserPasswordAuthenticator(userService, passwordLoginService) as UserAuthenticator<TUser>],
+                [TOKEN, new TokenAuthenticator(userService, tokenLoginService) as UserAuthenticator<TUser>]
             ]))
         }
         return this._userAuthenticator;
