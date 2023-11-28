@@ -7,7 +7,7 @@ import {
   UserAuthenticator,
   UserCredentials,
   createErrorResponse,
-  createSuccessResponse
+  createSuccessResponse,
 } from './user-authenticator';
 
 /**
@@ -45,5 +45,4 @@ export class InMemoryUserAuthenticator<U> implements UserAuthenticator<U> {
       }
     }
   }
-
 }

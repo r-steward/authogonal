@@ -2,7 +2,10 @@ import { AuthenticationState } from './authentication-state';
 import * as AuthActions from '../flux-actions';
 
 export const baseState: AuthenticationState<any> = Object.freeze({ isAuthorized: false, actionState: {} });
-export type StateHandler<U> = (state: AuthenticationState<U>, action: AuthActions.AuthenticationAction<U>) => AuthenticationState<U>;
+export type StateHandler<U> = (
+  state: AuthenticationState<U>,
+  action: AuthActions.AuthenticationAction<U>,
+) => AuthenticationState<U>;
 
 export function handleAuthAction<U>(
   state: AuthenticationState<U> = baseState,
@@ -121,7 +124,6 @@ function silentLoginFailure<U>(
     },
   };
 }
-
 
 function startLogout<U>(state: AuthenticationState<U>, _: AuthActions.RequestLogoutAction): AuthenticationState<U> {
   return {

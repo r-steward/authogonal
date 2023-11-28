@@ -25,7 +25,7 @@ export class DefaultTokenManager implements TokenManager {
     private readonly _rememberMeStorage: StringTokenStorage,
     private readonly _expiryDecoder: TokenExpiryDecoder,
     private readonly _dateProvider: DateProvider,
-  ) { }
+  ) {}
 
   public get hasTokens(): boolean {
     return this.refreshInProgress != null || this._accessStorage.getToken() != null;
@@ -39,8 +39,8 @@ export class DefaultTokenManager implements TokenManager {
   public getTokensForRefresh(): RefreshTokensStatus {
     return {
       refreshTokenStatus: this.getRefreshTokenStatus(),
-      rememberMeTokenStatus: this.getRememberMeTokenStatus()
-    }
+      rememberMeTokenStatus: this.getRememberMeTokenStatus(),
+    };
   }
 
   public async accessTokenRemaining(): Promise<number> {
@@ -138,7 +138,10 @@ export class DefaultTokenManager implements TokenManager {
     const now = this._dateProvider.getDateTime();
     const diff = (tokenDate?.getTime() ?? 0) - now.getTime();
     if (LOGGER.isDebugEnabled()) {
-      LOGGER.debug(`Checking token headroom: token expiry <${tokenDate?.toISOString()}> is <${diff / 1000}> seconds from now <${now.toISOString()}>`);
+      LOGGER.debug(
+        `Checking token headroom: token expiry <${tokenDate?.toISOString()}> is <${diff /
+          1000}> seconds from now <${now.toISOString()}>`,
+      );
     }
     return diff;
   }
@@ -150,7 +153,9 @@ export class DefaultTokenManager implements TokenManager {
     const tokenDate = this._expiryDecoder.decode(token);
     const now = this._dateProvider.getDateTime();
     if (LOGGER.isDebugEnabled()) {
-      LOGGER.debug(`Checking token expiry: token date <${tokenDate?.toISOString()}> should be after now <${now.toISOString()}>`)
+      LOGGER.debug(
+        `Checking token expiry: token date <${tokenDate?.toISOString()}> should be after now <${now.toISOString()}>`,
+      );
     }
     return tokenDate == null || tokenDate <= now;
   }

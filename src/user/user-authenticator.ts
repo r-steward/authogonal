@@ -32,13 +32,17 @@ export type AuthenticatorSuccessResponse<U> = {
   user: U;
   tokens: LifecycleTokens;
 };
-export const createSuccessResponse = <U>(user: U, tokens: LifecycleTokens): AuthenticatorSuccessResponse<U> => ({ type: SUCCESS, user, tokens });
+export const createSuccessResponse = <U>(user: U, tokens: LifecycleTokens): AuthenticatorSuccessResponse<U> => ({
+  type: SUCCESS,
+  user,
+  tokens,
+});
 export const createErrorResponse = (error: string): AuthenticatorFailureResponse => ({ type: FAILURE, error });
 export const resolveErrorOnIncorrectType = (logger: Logger, type: UserCredentialsType) => {
   const msg = `Incorrect credential type ${type} received`;
   logger.warn(msg);
   return Promise.resolve(createErrorResponse(msg));
-}
+};
 
 /**
  * Credentials used for authentication

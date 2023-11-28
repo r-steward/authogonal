@@ -1,13 +1,21 @@
 import { LogFactory } from 'logging-facade';
 import { AuthUserService, PasswordLoginService } from '../api/auth-service';
-import { AuthenticatorResponse, LOGIN, LoginCredentials, UserAuthenticator, UserCredentials, createErrorResponse, createSuccessResponse, resolveErrorOnIncorrectType } from './user-authenticator';
+import {
+  AuthenticatorResponse,
+  LOGIN,
+  LoginCredentials,
+  UserAuthenticator,
+  UserCredentials,
+  createErrorResponse,
+  createSuccessResponse,
+  resolveErrorOnIncorrectType,
+} from './user-authenticator';
 import { isError } from '../util';
 
 const LOGGER = LogFactory.getLogger('UserPasswordAuthenticator');
 
 export class UserPasswordAuthenticator<U> implements UserAuthenticator<U> {
-
-  constructor(private _userService: AuthUserService<U>, private _loginService: PasswordLoginService) { }
+  constructor(private _userService: AuthUserService<U>, private _loginService: PasswordLoginService) {}
 
   async authenticate(userCredentials: UserCredentials): Promise<AuthenticatorResponse<U>> {
     if (userCredentials.credentialType === LOGIN) {
@@ -33,5 +41,4 @@ export class UserPasswordAuthenticator<U> implements UserAuthenticator<U> {
       return createErrorResponse(reason);
     }
   }
-
 }

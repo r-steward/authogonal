@@ -3,18 +3,18 @@ import { UserCredentials } from '../user/user-authenticator';
 import * as AuthActions from './flux-actions';
 
 export type SilentLoginActions<U> =
-    | AuthActions.RequestedSilentLoginAction
-    | AuthActions.PerformRefreshLoginAction
-    | AuthActions.SilentLoginSuccessAction<U>
-    | AuthActions.SilentLoginFailureAction;
+  | AuthActions.RequestedSilentLoginAction
+  | AuthActions.PerformRefreshLoginAction
+  | AuthActions.SilentLoginSuccessAction<U>
+  | AuthActions.SilentLoginFailureAction;
 export type ManualLoginActions<U> =
-    | AuthActions.RequestedManualLoginAction
-    | AuthActions.ManualLoginSuccessAction<U>
-    | AuthActions.ManualLoginFailureAction;
+  | AuthActions.RequestedManualLoginAction
+  | AuthActions.ManualLoginSuccessAction<U>
+  | AuthActions.ManualLoginFailureAction;
 export type LogoutActions =
-    | AuthActions.PerformLogoutAction
-    | AuthActions.RequestLogoutAction
-    | AuthActions.LoggedOutAction;
+  | AuthActions.PerformLogoutAction
+  | AuthActions.RequestLogoutAction
+  | AuthActions.LoggedOutAction;
 export type RefreshLoginCallback = (event: AuthActions.PerformRefreshLoginAction) => void;
 export type SilentLoginCallback<U> = (event: SilentLoginActions<U>) => void;
 export type ManualLoginCallback<U> = (event: ManualLoginActions<U>) => void;
@@ -32,41 +32,39 @@ export type LogoutCallback = (event: LogoutActions) => void;
  * * methods can be wrapped in an observable which calls next on each callback
  */
 export interface AccessManager<TUser, TRequest> {
+  /**
+   * Enricher for authorizing api requests
+   */
+  readonly requestEnricher: RequestEnricher<TRequest>;
 
-    /**
-     * Enricher for authorizing api requests
-     */
-    readonly requestEnricher: RequestEnricher<TRequest>;
+  /**
+   * Sets the callback for async expiry refresh actions
+   * @param eventCallback handle events produced during action
+   */
+  setAsyncRefreshEventCallback(eventCallback: SilentLoginCallback<TUser>): void;
 
-    /**
-     * Sets the callback for async expiry refresh actions
-     * @param eventCallback handle events produced during action
-     */
-    setAsyncRefreshEventCallback(eventCallback: SilentLoginCallback<TUser>): void;
+  /**
+   * Perform login without user interaction (e.g. using tokens)
+   * @param eventCallback handle events produced during action
+   */
+  silentLogin(eventCallback: SilentLoginCallback<TUser>): Promise<boolean>;
 
-    /**
-     * Perform login without user interaction (e.g. using tokens)
-     * @param eventCallback handle events produced during action
-     */
-    silentLogin(eventCallback: SilentLoginCallback<TUser>): Promise<boolean>;
+  /**
+   * Perform a manual login using credentials
+   * @param credentials login credentials
+   * @param eventCallback handle events produced during action
+   */
+  manualLogin(credentials: UserCredentials, eventCallback: ManualLoginCallback<TUser>): Promise<boolean>;
 
-    /**
-     * Perform a manual login using credentials
-     * @param credentials login credentials
-     * @param eventCallback handle events produced during action
-     */
-    manualLogin(credentials: UserCredentials, eventCallback: ManualLoginCallback<TUser>): Promise<boolean>;
+  /**
+   * Perform logout
+   * @param eventCallback handle events produced during action
+   */
+  logout(eventCallback: LogoutCallback): Promise<void>;
 
-    /**
-     * Perform logout
-     * @param eventCallback handle events produced during action
-     */
-    logout(eventCallback: LogoutCallback): Promise<void>;
-
-    /**
-     * If tokens expire, can try to reauthenticate
-     * @param eventCallback handle events produced during action
-     */
-    onAccessExpired(eventCallback?: SilentLoginCallback<TUser>): Promise<boolean>;
-
+  /**
+   * If tokens expire, can try to reauthenticate
+   * @param eventCallback handle events produced during action
+   */
+  onAccessExpired(eventCallback?: SilentLoginCallback<TUser>): Promise<boolean>;
 }

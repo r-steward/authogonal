@@ -8,14 +8,14 @@ import {
   UserCredentials,
   createErrorResponse,
   createSuccessResponse,
-  resolveErrorOnIncorrectType
+  resolveErrorOnIncorrectType,
 } from './user-authenticator';
 import { isError } from '../util';
 
 const LOGGER = LogFactory.getLogger('TokenAuthenticator');
 
 export class TokenAuthenticator<U> implements UserAuthenticator<U> {
-  constructor(private _userService: AuthUserService<U>, private _loginService: TokenLoginService) { }
+  constructor(private _userService: AuthUserService<U>, private _loginService: TokenLoginService) {}
 
   async authenticate(userCredentials: UserCredentials): Promise<AuthenticatorResponse<U>> {
     if (userCredentials.credentialType === TOKEN) {
@@ -51,5 +51,4 @@ export class TokenAuthenticator<U> implements UserAuthenticator<U> {
     }
     return createSuccessResponse(user, tokens);
   }
-
 }

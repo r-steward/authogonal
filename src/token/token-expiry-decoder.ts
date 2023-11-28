@@ -18,7 +18,9 @@ export class TokenExpiryDecoderStringSeparated implements TokenExpiryDecoder {
   public decode(token: string): Date {
     const expiry = token?.split(this._separator)[2];
     try {
-      return expiry == null ? moment.unix(0).toDate() : moment.unix(Buffer.from(expiry, 'base64').readDoubleBE(0)).toDate();
+      return expiry == null
+        ? moment.unix(0).toDate()
+        : moment.unix(Buffer.from(expiry, 'base64').readDoubleBE(0)).toDate();
     } catch (e) {
       LOGGER.warn('Error decoding token', e);
       return moment.unix(0).toDate();

@@ -10,8 +10,8 @@ export function isPromise(p: any) {
 
 /**
  * does object have error message
- * @param e 
- * @returns 
+ * @param e
+ * @returns
  */
 export function isError(e: any): e is { message: string } {
   return typeof (e as { message: string }).message === 'string';
