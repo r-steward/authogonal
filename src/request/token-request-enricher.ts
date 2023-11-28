@@ -5,7 +5,7 @@ import { TokenProvider } from '../token/token-manager';
 
 const LOGGER = LogFactory.getLogger('request-token-authenticator');
 
-interface RequestLike {
+export interface RequestLike {
   set(field: string, val: string): this;
 }
 

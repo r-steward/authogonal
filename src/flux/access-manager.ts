@@ -1,8 +1,10 @@
+import { RequestEnricher } from '../request';
 import { UserCredentials } from '../user/user-authenticator';
 import * as AuthActions from './flux-actions';
 
 export type SilentLoginActions<U> =
     | AuthActions.RequestedSilentLoginAction
+    | AuthActions.PerformRefreshLoginAction
     | AuthActions.SilentLoginSuccessAction<U>
     | AuthActions.SilentLoginFailureAction;
 export type ManualLoginActions<U> =
@@ -29,27 +31,31 @@ export type LogoutCallback = (event: LogoutActions) => void;
  * * callback can be a standard dispatcher
  * * methods can be wrapped in an observable which calls next on each callback
  */
-export interface AccessManager<U> {
+export interface AccessManager<TUser, TRequest> {
 
     /**
-     * Sets the callback for timed refresh token events
-     * @param eventCallback 
+     * Enricher for authorizing api requests
      */
-    setRefreshLoginEventCallback(eventCallback: RefreshLoginCallback): void;
+    readonly requestEnricher: RequestEnricher<TRequest>;
+
+    /**
+     * Sets the callback for async expiry refresh actions
+     * @param eventCallback handle events produced during action
+     */
+    setAsyncRefreshEventCallback(eventCallback: SilentLoginCallback<TUser>): void;
 
     /**
      * Perform login without user interaction (e.g. using tokens)
      * @param eventCallback handle events produced during action
      */
-    silentLogin(eventCallback: SilentLoginCallback<U>): Promise<boolean>;
+    silentLogin(eventCallback: SilentLoginCallback<TUser>): Promise<boolean>;
 
     /**
      * Perform a manual login using credentials
      * @param credentials login credentials
      * @param eventCallback handle events produced during action
      */
-
-    manualLogin(credentials: UserCredentials, eventCallback: ManualLoginCallback<U>): Promise<boolean>;
+    manualLogin(credentials: UserCredentials, eventCallback: ManualLoginCallback<TUser>): Promise<boolean>;
 
     /**
      * Perform logout
@@ -58,15 +64,9 @@ export interface AccessManager<U> {
     logout(eventCallback: LogoutCallback): Promise<void>;
 
     /**
-     * If an API call is unauthorized, can try to reauthenticate
-     * @param eventCallback handle events produced during action
-     */
-    onUnauthorized(eventCallback: SilentLoginCallback<U>): Promise<boolean>;
-
-    /**
      * If tokens expire, can try to reauthenticate
      * @param eventCallback handle events produced during action
      */
-    onAccessExpired(eventCallback: SilentLoginCallback<U>): Promise<boolean>;
+    onAccessExpired(eventCallback?: SilentLoginCallback<TUser>): Promise<boolean>;
 
 }

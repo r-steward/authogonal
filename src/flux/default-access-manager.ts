@@ -3,27 +3,29 @@ import { TokenAndTypeStatus, TokenManager } from '../token/token-manager';
 import { AuthenticatorResponse, SUCCESS, UserAuthenticator, UserCredentials, createTokenCredentials } from '../user/user-authenticator';
 import { AccessManager, LogoutCallback, ManualLoginCallback, RefreshLoginCallback, SilentLoginCallback } from './access-manager';
 import * as AuthActions from './flux-actions';
+import { RequestEnricher } from '../request';
 
 const LOGGER = LogFactory.getLogger('DefaultAccessManager');
 
 /**
  * Access manager that uses ARR token model
  */
-export class DefaultAccessManager<U> implements AccessManager<U> {
+export class DefaultAccessManager<U, TRequest> implements AccessManager<U, TRequest> {
     private silentLoginInProgress: Promise<boolean>;
     private manualLoginInProgress: Promise<boolean>;
-    private eventCallback: RefreshLoginCallback;
+    private eventCallback: SilentLoginCallback<U>;
     private intervalId: any;
 
     constructor(
+        public readonly requestEnricher: RequestEnricher<TRequest>,
         private readonly userAuthenticator: UserAuthenticator<U>,
         private readonly tokenManager: TokenManager,
         private readonly refreshCheckInterval: number = 60_000
     ) {
-        this.eventCallback = (e) => { LOGGER.error(`No callback set for refresh timer event <${e.type}> - tokens will not refresh silently`) };
+        this.eventCallback = (e) => { LOGGER.warn(`No callback set for refresh timer event <${e.type}> - silent login events will be ignored`) };
     }
 
-    setRefreshLoginEventCallback(eventCallback: RefreshLoginCallback) {
+    setAsyncRefreshEventCallback(eventCallback: SilentLoginCallback<U>) {
         // set callback and clear interval if exists
         this.eventCallback = eventCallback;
         // start if already have tokens
@@ -52,11 +54,8 @@ export class DefaultAccessManager<U> implements AccessManager<U> {
         return this.manualLoginInProgress;
     }
 
-    async onUnauthorized(eventCallback: SilentLoginCallback<U>): Promise<boolean> {
-        return await this.silentLogin(eventCallback);
-    }
-
-    async onAccessExpired(eventCallback: SilentLoginCallback<U>): Promise<boolean> {
+    async onAccessExpired(eventCallback: SilentLoginCallback<U> = this.eventCallback): Promise<boolean> {
+        eventCallback(AuthActions.refreshSilentLogin);
         return await this.silentLogin(eventCallback);
     }
 
@@ -146,15 +145,7 @@ export class DefaultAccessManager<U> implements AccessManager<U> {
             LOGGER.debug(`Starting refresh timer at <${this.refreshCheckInterval}> ms intervals`);
         }
         clearInterval(this.intervalId);
-        const limit = this.refreshCheckInterval + 30_000;
-        this.intervalId = setInterval(async () => {
-            if (this.tokenManager.hasTokens) {
-                const headroom = await this.tokenManager.accessTokenRemaining();
-                if (headroom < limit) {
-                    this.eventCallback(AuthActions.refreshSilentLogin);
-                }
-            }
-        }, this.refreshCheckInterval).unref();
+        this.intervalId = setInterval(this.checkAccessTokenHeadroomCallback, this.refreshCheckInterval).unref();
     }
 
     private stopTimer() {
@@ -162,6 +153,16 @@ export class DefaultAccessManager<U> implements AccessManager<U> {
             LOGGER.debug(`Stopping token refresh timer <${this.intervalId}>`);
         }
         clearInterval(this.intervalId);
+    }
+
+    private checkAccessTokenHeadroomCallback = async () => {
+        const limit = this.refreshCheckInterval + 30_000;
+        if (this.tokenManager.hasTokens) {
+            const headroom = await this.tokenManager.accessTokenRemaining();
+            if (headroom < limit) {
+                await this.onAccessExpired();
+            }
+        }
     }
 
 }

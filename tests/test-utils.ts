@@ -1,5 +1,5 @@
 import { LogFactory } from 'logging-facade';
-import { AccessManager, LifecycleTokens, AllTokenStorage, AuthenticationAction, AuthenticationState, DateProvider, DefaultAccessManager, DefaultTokenManager, EventCallback, LOGIN, MemoryStorage, StateHandler, StrategyUserAuthenticator, TOKEN, TokenAuthenticator, TokenExpiryDecoderStringSeparated, TokenManager, UserAuthenticator, UserPasswordAuthenticator, baseState, createSuccessResponse, handleAuthAction, newAccessManagerBuilder } from '../src';
+import { AccessManager, LifecycleTokens, AllTokenStorage, AuthenticationAction, AuthenticationState, DateProvider, DefaultAccessManager, DefaultTokenManager, EventCallback, LOGIN, MemoryStorage, StateHandler, StrategyUserAuthenticator, TOKEN, TokenAuthenticator, TokenExpiryDecoderStringSeparated, TokenManager, UserAuthenticator, UserPasswordAuthenticator, baseState, createSuccessResponse, handleAuthAction, newAccessManagerBuilder, RequestLike } from '../src';
 import { AuthUserService, PasswordLoginService, TokenLoginService } from '../src/api/auth-service';
 const LOGGER = LogFactory.getLogger('TestUtils');
 
@@ -22,24 +22,25 @@ export type ExpectedSilentLoginCallCounts = {
 }
 
 // Workflow context
-export type WorkflowTestContext<U> = {
-    serviceStub: ServiceStub<U>;
-    eventCallbackStub: EventCallbackStub<U>;
+export type WorkflowTestContext<TUser, TRequest> = {
+    serviceStub: ServiceStub<TUser>;
+    eventCallbackStub: EventCallbackStub<TUser>;
     tokenManager: TokenManager;
+    tokenRemainingSpy: jest.SpyInstance;
     tokenStorage: AllTokenStorage;
-    mockServices: PasswordLoginService & TokenLoginService & AuthUserService<U>;
-    mockEventCallback: EventCallback<U>;
-    accessManager: AccessManager<U>;
-    callCounts: CallCounts<U>;
+    mockServices: PasswordLoginService & TokenLoginService & AuthUserService<TUser>;
+    mockEventCallback: EventCallback<TUser>;
+    accessManager: AccessManager<TUser, TRequest>;
+    callCounts: CallCounts<TUser>;
     currentDate: Date;
 }
 
-export function createTestContext<U>(): WorkflowTestContext<U> {
-    let context: WorkflowTestContext<U> = null as unknown as WorkflowTestContext<U>;
+export function createTestContext<TUser, TRequest extends RequestLike>(): WorkflowTestContext<TUser, TRequest> {
+    let context: WorkflowTestContext<TUser, TRequest> = null as unknown as WorkflowTestContext<TUser, TRequest>;
 
     // services
-    const serviceStub = new ServiceStub<U>();
-    const mockServices = createMockService<U>(serviceStub);
+    const serviceStub = new ServiceStub<TUser>();
+    const mockServices = createMockService<TUser>(serviceStub);
 
     // access manager
     const tokenStorage: AllTokenStorage = {
@@ -54,7 +55,8 @@ export function createTestContext<U>(): WorkflowTestContext<U> {
         new TokenExpiryDecoderStringSeparated('.'),
         new DateProviderMocker(() => context.currentDate),
     );
-    const accessManager = newAccessManagerBuilder<U>()
+    const tokenRemainingSpy = jest.spyOn(tokenManager, 'accessTokenRemaining');
+    const accessManager = newAccessManagerBuilder<TUser, TRequest>()
         .setPasswordLoginService(mockServices)
         .setTokenLoginService(mockServices)
         .setUserService(mockServices)
@@ -65,11 +67,13 @@ export function createTestContext<U>(): WorkflowTestContext<U> {
     // event callbacks
     const eventCallbackStub = new EventCallbackStub(handleAuthAction, baseState);
     const mockEventCallback = createMockEventCallback(eventCallbackStub);
+    accessManager.setAsyncRefreshEventCallback(mockEventCallback);
 
     // create context
     context = {
         accessManager,
         tokenManager,
+        tokenRemainingSpy,
         eventCallbackStub,
         serviceStub,
         tokenStorage,
@@ -200,9 +204,11 @@ export class ServiceStub<U> implements PasswordLoginService, TokenLoginService, 
     private loginWithToken(name: string, predicate: (e: LoginEntry<U>) => boolean): Promise<LifecycleTokens> {
         const entry = Array.from(this.userMap.values()).find(predicate);
         if (entry) {
+            const remember = this.serverSideTokens.rememberMeToken != null;
+            entry.remember = remember;
             entry.accessToken = this.serverSideTokens.accessToken;
             entry.refreshToken = this.serverSideTokens.refreshToken;
-            entry.rememberMeToken = entry.remember ? this.serverSideTokens.rememberMeToken : undefined;
+            entry.rememberMeToken = remember ? this.serverSideTokens.rememberMeToken : undefined;
         }
         return this.getResponse(name, entry);
     }
@@ -212,7 +218,7 @@ export class ServiceStub<U> implements PasswordLoginService, TokenLoginService, 
         if (!entry) {
             return Promise.reject(new Error(`Failed to login with ${name}`));
         }
-        return Promise.resolve({ accessToken: entry!.accessToken!, refreshToken: entry!.refreshToken! });
+        return Promise.resolve({ accessToken: entry.accessToken!, refreshToken: entry.refreshToken!, rememberMeToken: entry.rememberMeToken! });
     }
 
 }

@@ -7,9 +7,9 @@ type DispatchLike = (action: any) => any;
 /**
  * Creates thunk objects to perform access manager actions
  */
-export class AuthogonalActionCreator<U> {
+export class AuthogonalActionCreator<U, R> {
 
-    constructor(private accessManager: AccessManager<U>) { }
+    constructor(private accessManager: AccessManager<U, R>) { }
 
     public readonly createManualLoginAction = (credentials: UserCredentials) => {
         const am = this.accessManager;
@@ -43,8 +43,8 @@ export class AuthogonalActionCreator<U> {
         }
     }
 
-    public readonly initializeRefresh = (dispatch: DispatchLike) => {
+    public readonly setAsyncRefreshEventDispatcher = (dispatch: DispatchLike) => {
         const refreshAction = this.createRefreshLoginAction();
-        this.accessManager.setRefreshLoginEventCallback(_ => dispatch(refreshAction));
+        this.accessManager.setAsyncRefreshEventCallback(_ => dispatch(refreshAction));
     }
 }

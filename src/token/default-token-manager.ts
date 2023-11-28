@@ -136,9 +136,9 @@ export class DefaultTokenManager implements TokenManager {
     }
     const tokenDate = this._expiryDecoder.decode(token);
     const now = this._dateProvider.getDateTime();
-    const diff = tokenDate.getTime() - now.getTime();
+    const diff = (tokenDate?.getTime() ?? 0) - now.getTime();
     if (LOGGER.isDebugEnabled()) {
-      LOGGER.debug(`Checking token headroom: token expiry is <${diff / 1000}> seconds from now`);
+      LOGGER.debug(`Checking token headroom: token expiry <${tokenDate?.toISOString()}> is <${diff / 1000}> seconds from now <${now.toISOString()}>`);
     }
     return diff;
   }
@@ -150,8 +150,8 @@ export class DefaultTokenManager implements TokenManager {
     const tokenDate = this._expiryDecoder.decode(token);
     const now = this._dateProvider.getDateTime();
     if (LOGGER.isDebugEnabled()) {
-      LOGGER.debug(`Checking token expiry: token date <${tokenDate}> should be less than <${now}>`)
+      LOGGER.debug(`Checking token expiry: token date <${tokenDate?.toISOString()}> should be after now <${now.toISOString()}>`)
     }
-    return tokenDate == null || tokenDate >= now;
+    return tokenDate == null || tokenDate <= now;
   }
 }

@@ -1,14 +1,14 @@
 import { AuthUserService, PasswordLoginService, TokenLoginService } from "../api/auth-service";
 import { DateProvider, DateProviderSystem } from "../date-provider";
-import { RequestEnricher } from "../request";
-import { DefaultTokenManager, MemoryStorage, StringTokenStorage, TokenExpiryDecoder, TokenExpiryDecoderStringSeparated, TokenManager } from "../token";
+import { RequestEnricher, RequestLike, TokenRequestEnricher } from "../request";
+import { DefaultTokenManager, DefaultTokenProvider, MemoryStorage, StringTokenStorage, TokenExpiryDecoder, TokenExpiryDecoderStringSeparated, TokenManager } from "../token";
 import { LOGIN, StrategyUserAuthenticator, TOKEN, TokenAuthenticator, UserAuthenticator, UserPasswordAuthenticator } from "../user";
 import { AccessManager } from "./access-manager";
 import { DefaultAccessManager } from "./default-access-manager";
 
-export const newAccessManagerBuilder = <TUser>() => new DefaultAccessManagerBuilder<TUser>();
+export const newAccessManagerBuilder = <TUser, TRequest extends RequestLike>() => new DefaultAccessManagerBuilder<TUser, TRequest>();
 
-export interface AccessManagerBuilder<TUser> {
+export interface AccessManagerBuilder<TUser, TRequest> {
     setDateProvider(value: DateProvider): this;
     setTokenStorage(value: AllTokenStorage): this;
     setTokenManager(tokenManager: TokenManager): this;
@@ -17,8 +17,7 @@ export interface AccessManagerBuilder<TUser> {
     setUserService(userService: AuthUserService<TUser>): this;
     setPasswordLoginService(loginService: PasswordLoginService): this;
     setTokenLoginService(loginService: TokenLoginService): this;
-    //    build(): { accessManager: AccessManager<TUser>, requestEnricher: RequestEnricher<TRequest> };
-    build(): AccessManager<TUser>;
+    build(): AccessManager<TUser, TRequest>;
 }
 
 export interface AllTokenStorage {
@@ -27,7 +26,7 @@ export interface AllTokenStorage {
     rememberMeToken: StringTokenStorage;
 }
 
-class DefaultAccessManagerBuilder<TUser> implements AccessManagerBuilder<TUser> {
+class DefaultAccessManagerBuilder<TUser, TRequest extends RequestLike> implements AccessManagerBuilder<TUser, TRequest> {
     private _userAuthenticator: UserAuthenticator<TUser>;
     private _userService: AuthUserService<TUser>;
     private _passwordLoginService: PasswordLoginService;
@@ -37,11 +36,11 @@ class DefaultAccessManagerBuilder<TUser> implements AccessManagerBuilder<TUser> 
     private _dateProvider: DateProvider;
     private _expiryDecoder: TokenExpiryDecoder;
 
-    build(): AccessManager<TUser> {
+    build(): AccessManager<TUser, TRequest> {
         const userAuthenticator = this.getUserAuthenticator();
         const tokenManager = this.getTokenManager();
-        const accessManager = new DefaultAccessManager(userAuthenticator, tokenManager);
-        return accessManager;
+        const requestEnricher = new TokenRequestEnricher<TRequest>(new DefaultTokenProvider(tokenManager));
+        return new DefaultAccessManager(requestEnricher, userAuthenticator, tokenManager);
     }
 
     public setDateProvider(value: DateProvider): this {

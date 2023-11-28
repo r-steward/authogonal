@@ -1,4 +1,4 @@
-import { isEqual } from 'lodash';
+import isEqual from 'lodash.isequal';
 import { LifecycleTokens } from '../token';
 import {
   AuthenticatorResponse,

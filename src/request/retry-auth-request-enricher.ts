@@ -9,8 +9,7 @@ export class RetryAuthRequestEnricher<R, U> implements RequestEnricher<R> {
     private static readonly authRetryCount = 3;
     constructor(
         private readonly requestEnricher: RequestEnricher<R>,
-        private readonly accessManager: AccessManager<U>,
-        private readonly eventCallback: EventCallback<U>
+        private readonly accessManager: AccessManager<U, R>,
     ) { }
 
     async authorizeRequest(request: R): Promise<R> {
@@ -21,7 +20,8 @@ export class RetryAuthRequestEnricher<R, U> implements RequestEnricher<R> {
         try {
             return await this.requestEnricher.authorizeRequest(request);
         } catch (e) {
-            if (this.shouldAttemptAuthorization(e, count++) && await this.accessManager.onUnauthorized(this.eventCallback)) {
+            if (this.shouldAttemptAuthorization(e, count++) &&
+                await this.accessManager.onAccessExpired()) {
                 return await this.authorizeRequestWithRetry(request, count);
             }
             throw e;

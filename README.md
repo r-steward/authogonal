@@ -2,8 +2,10 @@
 ### Typescript Client Authentication Library
 
 Authogonal provides functionality for authenticated web service access, managing login and tokens that allow SPA to work seamlessly with back end authenticated requests.
+
 It is designed primarily to easily integrate with an event based state management UI (e.g. react with redux).
-The implementation is framework agnostic, to allow any side-effect managment style to be used (e.g. thunks, sagas, or observables)
+The implementation is framework agnostic, to allow any side-effect managment style to be used (e.g. thunks, sagas, or observables).
+
 
 ### Quick Start
 
@@ -47,7 +49,7 @@ const accessManager = Authogonal.newAccessManagerBuilder<AppUser>()
 
 // If using redux thunk, you can use the provided action creator
 const actionCreator = new Authogonal.AuthogonalActionCreator(accessManager);
-actionCreator.initializeRefresh(dispatch);
+actionCreator.setAsyncRefreshEventDispatcher(dispatch);
 const onLogin = async (userId: string, password: string): Promise<boolean> => {
   const loginCredentials = Authogonal.createLoginCredentials({ userId, password,remember: true});
   const loginThunk = actionCreator.createManualLoginAction(loginCredentials)
@@ -55,17 +57,7 @@ const onLogin = async (userId: string, password: string): Promise<boolean> => {
 }
 
 // For redux-observable, set up epics using provided callback converters
-accessManager.setRefreshTimerCallback(dispatch);
-const onRefreshRequired = (action$: Observable<Authogonal.PerformRefreshLoginAction>) => {
-    return action$.pipe(
-        ofType(Authogonal.PERFORM_REFRESH_LOGIN),
-        switchMap(event => {
-            return new Observable<Authogonal.SilentLoginActions<AppUer>>(observer => {
-                accessManager.silentLogin(Authogonal.observerToSilentLoginCallback(observer));
-            })
-        })
-    );
-}
+accessManager.setAsyncRefreshEventCallback(dispatch);
 const onManualLogin = (action$: Observable<Authogonal.PerformManualLoginAction>) => {
     return action$.pipe(
         ofType(Authogonal.PERFORM_MANUAL_LOGIN),
@@ -87,48 +79,39 @@ API requests can be enriched with authorization tokens using the supplied reques
 For example, with SuperAgent
 
 ```ts
-        const req = Request.post(uri).send(body);
-        const authed = (authAppender != null ? authAppender.authorizeRequest(req) : req);
-        try {
-            const response = await authed;
-
-
+const request = Request.post(uri).send(body);
+const response = await accessManager.requestEnricher.enrich(request);
 ```
-For side effects, there are some helpers provided for use with thunk or observable
-
 
 ### Documentation
-The main interface to the authentication library is the AccessManager.
+
+The main interface to the authentication library is the AccessManager and the Request Enricher.
+
 ```ts
 interface AccessManager {
-  silentLogin(eventCallback: SilentLoginCallback<U>): Promise<boolean>;
-  manualLogin(credentials: UserCredentials, eventCallback: ManualLoginCallback<U>): Promise<boolean>;
-  onUnauthorized(eventCallback: AuthActions.EventCallback<U>): Promise<boolean>;
+    readonly requestEnricher: RequestEnricher<TRequest>;
+    // these should be called as side-effects by dispatching events
+    silentLogin(eventCallback: SilentLoginCallback<TUser>): Promise<boolean>;
+    manualLogin(credentials: UserCredentials, eventCallback: ManualLoginCallback<TUser>): Promise<boolean>;
+    logout(eventCallback: LogoutCallback): Promise<void>;
+    // this should be called with the dispatcher for any direct async calls (e.g. timer that refreshes tokens) 
+    setAsyncRefreshEventCallback(eventCallback: SilentLoginCallback<TUser>): void;
+    // this can be called when you know that a refresh is required (e.g. if a request returns a 403)
+    onAccessExpired(eventCallback?: SilentLoginCallback<TUser>): Promise<boolean>;  
 }
-```
-These methods and event callbacks allow you to call authentication functionality, and forward authentication events, via your particular side-effect management implementation.
 
-The request enricher supplements back end requests with appropriate authentication once a user has been authenticated (e.g. auth tokens)
-```ts
 export interface RequestEnricher<R> {
   authorizeRequest(request: R): Promise<R>;
 }
 ```
+These methods and event callbacks allow you to call authentication functionality, and forward authentication events, via your particular side-effect management implementation.
+
+The request enricher supplements back end requests with appropriate authentication once a user has been authenticated (e.g. using auth tokens)
+
 ### API services
 
 ```ts
-export interface UserAuthenticator<U> {
-  authenticate(userCredentials: UserCredentials): Promise<U>;
-  logout(logoutInfo: LogoutInfo): Promise<void>;
-}
-```
-Authenticate with e.g. login credentials (username/password).
-```js
-const userCredentials: 
-```
 
-Once a user has been authenticated, API requests can be authenticated using the RequestAuthenticator (e.g. by adding a security token to a request header)
-```js
 import { AuthenticatorResponse, LogoutInfo, UserAuthenticator, UserCredentials, UserCredentialsDefinition } from "./user-authenticator";
 
 declare module './user-authenticator' {
@@ -147,8 +130,6 @@ export class BespokeAuthenticator<U> implements UserAuthenticator<U> {
 
 
 ```
-
-
 
 ## Token Lifecycle
 * On start up, check tokens

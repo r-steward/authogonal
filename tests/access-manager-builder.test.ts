@@ -1,5 +1,5 @@
 ﻿import { AuthogonalActionCreator, UserCredentials, createLoginCredentials, newAccessManagerBuilder } from '../src';
-import { ServiceStub, createMockEventCallback, createMockService } from './test-utils';
+import { MockRequestLike, ServiceStub, createMockEventCallback, createMockService } from './test-utils';
 
 interface TestUser {
     username: string;
@@ -20,15 +20,12 @@ describe('Test Access Manager Builder', () => {
         const mockServices = createMockService<TestUser>(serviceStub);
         const mockEventCallback = createMockEventCallback();
         // act
-        const accessManager = newAccessManagerBuilder<TestUser>()
+        const accessManager = newAccessManagerBuilder<TestUser, MockRequestLike>()
             .setPasswordLoginService(mockServices)
             .setTokenLoginService(mockServices)
             .setUserService(mockServices)
             .build();
         const loggedIn = await accessManager.manualLogin(loginCredentials, mockEventCallback);
-
-        //
-
         // assert
         expect(loggedIn).toBe(true);
         expect(mockServices.loginWithUserId).toHaveBeenCalledTimes(1);
